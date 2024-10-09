@@ -3,7 +3,7 @@
 
 
 
-https://github.com/ahtziriHuerta/Laberinto/edit/main/README.md
+https://github.com/ahtziriHuerta/Laberinto
 
 
 Lista objetivos
