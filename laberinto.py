@@ -1,8 +1,9 @@
 import tkinter as tk
 import time
+from tkinter import simpledialog, messagebox
 
 # Función para resolver el laberinto utilizando recursión y programación dinámica (memoización)
-def resolver_laberinto(laberinto, x, y, solucion, memo, canvas, cell_size, delay=500):
+def resolver_laberinto(laberinto, x, y, solucion, memo, canvas, cell_size, delay=500, root=None):
     # Verificamos si estamos fuera de los límites del laberinto
     if x < 0 or y < 0 or x >= len(laberinto) or y >= len(laberinto[0]):
         return False  # Si estamos fuera de los límites, no es una solución válida
@@ -13,15 +14,17 @@ def resolver_laberinto(laberinto, x, y, solucion, memo, canvas, cell_size, delay
         dibujar_celda(canvas, x, y, "green", cell_size)  # Mostramos la salida
         canvas.update()
         time.sleep(delay / 1000)  # Pausa para visualización paso a paso
+        # Mostrar mensaje de éxito
+        messagebox.showinfo("¡Éxito!", "¡Encontraste la salida!")
+        root.destroy()
         return True  # Indicamos que hemos encontrado la salida
 
-    
     # Comprobamos si ya conocemos la solución desde esta celda (Memoización)
     if memo[x][y] != -1:
         return memo[x][y]  # Si ya lo hemos calculado, devolvemos el resultado almacenado
 
     # Comprobamos si es un camino válido
-    if es_camino_valido(laberinto, x, y):
+    if es_camino_valido(laberinto, x, y, canvas, cell_size, root):  # Pasamos root a es_camino_valido
         solucion[x][y] = 1  # Marcamos la celda actual como parte del camino
         dibujar_celda(canvas, x, y, "yellow", cell_size)  # Mostramos el camino en amarillo
         canvas.update()
@@ -38,22 +41,22 @@ def resolver_laberinto(laberinto, x, y, solucion, memo, canvas, cell_size, delay
             time.sleep(delay / 1000)
 
         # Movemos hacia la derecha
-        if resolver_laberinto(laberinto, x, y + 1, solucion, memo, canvas, cell_size, delay):
+        if resolver_laberinto(laberinto, x, y + 1, solucion, memo, canvas, cell_size, delay, root):
             memo[x][y] = True  # Guardamos el resultado para futuras referencias
             return True
 
         # Movemos hacia abajo
-        if resolver_laberinto(laberinto, x + 1, y, solucion, memo, canvas, cell_size, delay):
+        if resolver_laberinto(laberinto, x + 1, y, solucion, memo, canvas, cell_size, delay, root):
             memo[x][y] = True  # Guardamos el resultado
             return True
 
         # Movemos hacia la izquierda
-        if resolver_laberinto(laberinto, x, y - 1, solucion, memo, canvas, cell_size, delay):
+        if resolver_laberinto(laberinto, x, y - 1, solucion, memo, canvas, cell_size, delay, root):
             memo[x][y] = True  # Guardamos el resultado
             return True
 
         # Movemos hacia arriba
-        if resolver_laberinto(laberinto, x - 1, y, solucion, memo, canvas, cell_size, delay):
+        if resolver_laberinto(laberinto, x - 1, y, solucion, memo, canvas, cell_size, delay, root):
             memo[x][y] = True  # Guardamos el resultado
             return True
 
@@ -69,10 +72,12 @@ def resolver_laberinto(laberinto, x, y, solucion, memo, canvas, cell_size, delay
     return False
 
 # Función que comprueba si una celda es válida
-def es_camino_valido(laberinto, x, y):
+def es_camino_valido(laberinto, x, y, canvas, cell_size, root):
     if x >= 0 and y >= 0 and x < len(laberinto) and y < len(laberinto[0]):  # Verifica si está dentro de los límites
         if laberinto[x][y] == 111:  # Trivia
-            return trivia()  # Si responde correctamente, puede continuar
+            dibujar_celda(canvas, x, y, "orange", cell_size)  # Mostramos la celda de trivia
+            canvas.update()
+            return trivia(root)  # Pasamos root a trivia para cerrar el programa si es necesario
         elif laberinto[x][y] == 3 or laberinto[x][y] == 4:  # Celdas de teletransportación
             return True  # Permitimos continuar si es una celda de teletransportación
         elif laberinto[x][y] == 0 or laberinto[x][y] == 2:  # Camino válido o salida
@@ -92,8 +97,23 @@ def dibujar_celda(canvas, x, y, color, cell_size):
     canvas.create_rectangle(y * cell_size, x * cell_size, (y + 1) * cell_size, (x + 1) * cell_size, fill=color)
 
 # Función para manejar trivia en celdas especiales
-def trivia():
-    return True  # Para simplificar, asumimos que la trivia siempre es correcta
+def trivia(root):
+    pregunta = "¿Cuál es la capital de Francia?"
+    respuesta_correcta = "paris"
+
+    while True:
+        # Crear una ventana emergente para hacer la pregunta
+        respuesta_usuario = simpledialog.askstring("Trivia", pregunta)
+
+        if respuesta_usuario is None:  # Si el usuario presiona cancelar
+            root.quit()  # Cerramos la ventana principal
+            return False  # Devolvemos False para indicar que se ha cancelado
+        elif respuesta_usuario.lower() == respuesta_correcta.lower():
+            return True  # Si responde correctamente, puede continuar
+        else:
+            # Mostrar un mensaje de error y volver a preguntar
+            messagebox.showerror("Respuesta incorrecta", "La respuesta es incorrecta. Vuelve a intentarlo.")
+            continue  # Volvemos a preguntar si la respuesta es incorrecta
 
 # Función principal para ejecutar la resolución del laberinto con visualización
 def ejecutar_laberinto_visual():
@@ -101,12 +121,12 @@ def ejecutar_laberinto_visual():
     cell_size = 50
     delay = 500  # Delay en milisegundos entre pasos
     laberinto = [
-        [0, 1, 0, 0, 0, 1],
-        [111, 1, 1, 0, 1, 1],
-        [3, 0, 0, 0, 1, 0],
-        [1, 1, 1, 0, 1, 0],
-        [1, 0, 1, 0, 4, 0],
-        [1, 0, 0, 0, 0, 2]
+        [0, 1, 0, 0, 0, 1, 0],
+        [0, 1, 1, 3, 1, 1, 0],
+        [0, 0, 0, 0, 1, 0, 0],
+        [1, 1, 1, 0, 1, 0, 1],
+        [1, 0, 1, 0, 0, 0, 1],
+        [1, 4, 0, 111, 0, 0, 2]  # Añadido un 0 al final para igualar el número de columnas
     ]
     solucion = [[0 for _ in range(len(laberinto[0]))] for _ in range(len(laberinto))]
     memo = [[-1 for _ in range(len(laberinto[0]))] for _ in range(len(laberinto))]
@@ -128,13 +148,14 @@ def ejecutar_laberinto_visual():
                 dibujar_celda(canvas, i, j, "blue", cell_size)
             elif laberinto[i][j] == 2:  # Salida
                 dibujar_celda(canvas, i, j, "green", cell_size)
+            else:  # Camino (celdas con valor 0)
+                dibujar_celda(canvas, i, j, "white", cell_size)  # Representamos el camino en blanco
 
     # Resolver el laberinto con visualización
-    resolver_laberinto(laberinto, 0, 0, solucion, memo, canvas, cell_size, delay)
+    resolver_laberinto(laberinto, 0, 0, solucion, memo, canvas, cell_size, delay, root)
 
     # Iniciar la interfaz gráfica
     root.mainloop()
 
 # Ejecutamos la función principal
 ejecutar_laberinto_visual()
-
