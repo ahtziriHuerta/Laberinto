@@ -41,7 +41,7 @@ def trivia(root):
         else:
             messagebox.showerror("Error", "Respuesta incorrecta. Inténtalo de nuevo.")
 
-# Mover el jugador a la nueva posición si es válida
+# Función para mover al jugador
 def mover_jugador(laberinto, canvas, jugador_pos, nueva_x, nueva_y, cell_size, root, memo):
     x, y = jugador_pos
     if es_camino_valido(laberinto, nueva_x, nueva_y):
@@ -50,7 +50,7 @@ def mover_jugador(laberinto, canvas, jugador_pos, nueva_x, nueva_y, cell_size, r
 
         # Si entra en una celda de trivia (111)
         if laberinto[nueva_x][nueva_y] == 111:
-            if not trivia(root):  # Pasamos 'root' aquí para cerrar la ventana si es necesario
+            if not trivia(root):
                 return
 
         # Si entra en una celda de teletransportación (3 o 4)
@@ -60,13 +60,21 @@ def mover_jugador(laberinto, canvas, jugador_pos, nueva_x, nueva_y, cell_size, r
         # Verificar si el jugador ha llegado a la salida
         if laberinto[nueva_x][nueva_y] == 2:
             messagebox.showinfo("¡Éxito!", "¡Encontraste la salida!")
-            root.destroy()  # Cerrar la ventana principal
+            root.destroy()
             return
 
         # Actualizar la posición del jugador
         jugador_pos[0], jugador_pos[1] = nueva_x, nueva_y
         # Dibujar al jugador en la nueva posición
-        dibujar_celda(canvas, nueva_x, nueva_y, "blue", cell_size)  # Usamos 'blue' para representar la posición actual del jugador
+        dibujar_celda(canvas, nueva_x, nueva_y, "blue", cell_size)
+
+        # Comprobar si se puede llegar a la salida desde la nueva posición
+        if puede_llegar_a_salida(laberinto, nueva_x, nueva_y, memo):
+            print(f"El jugador puede llegar a la salida desde la posición ({nueva_x}, {nueva_y})")
+        else:
+            print(f"El jugador NO puede llegar a la salida desde la posición ({nueva_x}, {nueva_y})")
+    else:
+        print(f"No se puede mover a la posición ({nueva_x}, {nueva_y}) porque es inválida.")
 
 # Programación dinámica para verificar si se puede llegar a la salida
 def puede_llegar_a_salida(laberinto, x, y, memo):
@@ -74,15 +82,19 @@ def puede_llegar_a_salida(laberinto, x, y, memo):
         return False  # Fuera de los límites del laberinto
     
     if laberinto[x][y] == 1:  # Pared
+        print(f"Posición ({x}, {y}) es una pared.")
         return False
     
     if laberinto[x][y] == 2:  # Salida encontrada
+        print(f"Salida encontrada en ({x}, {y})")
         return True
     
     if memo[x][y] is not None:  # Si ya calculamos para esta celda
+        print(f"Posición ({x}, {y}) ya fue calculada previamente. Valor: {memo[x][y]}")
         return memo[x][y]
 
     # Marcar como visitado temporalmente
+    print(f"Calculando para posición ({x}, {y}) por primera vez.")
     memo[x][y] = False
 
     # Intentamos moverse en 4 direcciones y almacenamos el resultado en memo[x][y]
@@ -91,6 +103,7 @@ def puede_llegar_a_salida(laberinto, x, y, memo):
                   puede_llegar_a_salida(laberinto, x, y + 1, memo) or  # Derecha
                   puede_llegar_a_salida(laberinto, x, y - 1, memo))    # Izquierda
     
+    print(f"Resultado de memo[{x}][{y}] = {memo[x][y]}")
     return memo[x][y]
 
 # Función para manejar los eventos del teclado
