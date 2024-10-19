@@ -66,7 +66,7 @@ def mover_jugador(laberinto, canvas, jugador_pos, nueva_x, nueva_y, cell_size, r
         # Actualizar la posición del jugador
         jugador_pos[0], jugador_pos[1] = nueva_x, nueva_y
         # Dibujar al jugador en la nueva posición
-        dibujar_celda(canvas, nueva_x, nueva_y, "blue", cell_size)
+        dibujar_celda(canvas, nueva_x, nueva_y, "cyan", cell_size)
 
         # Comprobar si se puede llegar a la salida desde la nueva posición
         if puede_llegar_a_salida(laberinto, nueva_x, nueva_y, memo):
@@ -160,7 +160,7 @@ def ejecutar_laberinto_visual():
                 dibujar_celda(canvas, i, j, "white", cell_size)
 
     # Dibujar al jugador en la posición inicial
-    dibujar_celda(canvas, jugador_pos[0], jugador_pos[1], "blue", cell_size)
+    dibujar_celda(canvas, jugador_pos[0], jugador_pos[1], "cyan", cell_size)
 
     # Vincular las teclas de flecha al movimiento del jugador
     root.bind("<Up>", lambda event: manejar_teclado(event, laberinto, canvas, jugador_pos, cell_size, root, memo))
